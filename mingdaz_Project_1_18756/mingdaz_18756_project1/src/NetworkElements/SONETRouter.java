@@ -21,21 +21,20 @@ public class SONETRouter extends SONETRouterTA{
 	 * @param	nic the NIC the frame was received on
 	 */
 	public void receiveFrame(SONETFrame frame, int wavelength, OpticalNICTA nic){
-		if(dropFrequency.contains(wavelength)){
+		if(destinationFrequencies.values().contains(wavelength)){
 			// check if  the frame is on the router drop frequency 
-			if(destinationFrequencies.values().contains(wavelength)){
-				// if so, check if the frame is also the router destination frequency 
+			if(dropFrequency.contains(wavelength)){
+			// if so, check if the frame is also the router destination frequency 
 				sink(frame,wavelength);
 			}
 			else{
-				// take it off the line
-				// don't know what to do now;
-				;
+				// if the frequency does not match any drop frequency then we forward it. 
+				sendRingFrame(frame,wavelength,nic);	
 			}
 		}
 		else{
-			// if the frequency does not match any drop frequency then we forward it. 
-			sendRingFrame(frame,wavelength,nic);
+			// do not forward this message
+			;
 		}
 	}
 	
