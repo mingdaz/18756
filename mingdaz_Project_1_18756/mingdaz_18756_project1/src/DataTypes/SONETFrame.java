@@ -17,7 +17,7 @@ public class SONETFrame extends SONETFrameTA{
 		this.delay += delay;
 	}
 	
-	public SONETFrame clone() throws CloneNotSupportedException {
+	public SONETFrame clone(){
 		SONETFrame newframe = new SONETFrame(this.getSPE().clone());
 		newframe.delay = this.delay;
 		newframe.setOAMFlags(this.getOAMFlags());
