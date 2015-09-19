@@ -14,6 +14,6 @@ public class SONETFrame extends SONETFrameTA{
 	 * @param	delay the additional delay to be added
 	 */
 	public void addDelay(int delay){
-		this.delay = delay;
+		this.delay += delay;
 	}
 }
