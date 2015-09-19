@@ -1,6 +1,7 @@
 package NetworkElements;
 
 import DataTypes.*;
+
 import java.util.*;
 
 public class SONETRouter extends SONETRouterTA{
@@ -49,8 +50,11 @@ public class SONETRouter extends SONETRouterTA{
 		// except the one it was received on. Basically what UPSR does
 		for(OpticalNICTA NIC:NICs)
 			if(NIC.getIsOnRing() && !NIC.equals(nic))
-				NIC.sendFrame(frame, wavelength);
+				try {
+					NIC.sendFrame(frame.clone(), wavelength);
+				} catch (CloneNotSupportedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 	}
-	
-
 }
