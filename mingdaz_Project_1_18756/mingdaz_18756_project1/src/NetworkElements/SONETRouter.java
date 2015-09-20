@@ -29,7 +29,7 @@ public class SONETRouter extends SONETRouterTA{
 			}
 			else{
 				// if the frequency does not match any drop frequency then we forward it. 
-				sendRingFrame(frame,wavelength,nic);	
+				sendRingFrameOp(frame,wavelength,nic);	
 			}
 		}
 		else{
@@ -50,5 +50,74 @@ public class SONETRouter extends SONETRouterTA{
 		for(OpticalNICTA NIC:NICs)
 			if(NIC.getIsOnRing() && !NIC.equals(nic))
 				NIC.sendFrame(frame.clone(), wavelength);
+	}
+	
+	public void sendRingFrameOp(SONETFrame frame, int wavelength, OpticalNICTA nic){
+		// Loop through the interfaces sending the frame on interfaces that are on the ring
+		// except the one it was received on. Basically what UPSR does
+		Boolean send = false;
+		Boolean flag = true;
+		if(nic==null){
+			for(int i:destinationNextHop.get(wavelength)){
+				OpticalNICTA NIC = NICs.get(i);
+				if(NIC.getIsClockwise()==flag && ! NIC.getHasError() ){
+					NIC.sendFrame(frame.clone(), wavelength);
+					send = true;
+				}
+			}
+			if(!send){
+				int i=0;		
+				for(OpticalNICTA NIC:NICs){
+					if(destinationNextHop.get(wavelength).contains(i++)){
+						continue;
+					}
+					if(NIC.getIsClockwise()==flag && ! NIC.getHasError() && !NIC.equals(nic) ){
+						NIC.sendFrame(frame.clone(), wavelength);
+					}
+				}
+			}
+			send = false;
+			flag = false;
+			for(int i:destinationNextHop.get(wavelength)){
+				OpticalNICTA NIC = NICs.get(i);
+				if(NIC.getIsClockwise()==flag && ! NIC.getHasError() ){
+					NIC.sendFrame(frame.clone(), wavelength);
+					send = true;
+				}
+			}
+			if(!send){
+				int i=0;		
+				for(OpticalNICTA NIC:NICs){
+					if(destinationNextHop.get(wavelength).contains(i++)){
+						continue;
+					}
+					if(NIC.getIsClockwise()==flag && ! NIC.getHasError() &&!NIC.equals(nic) ){
+						NIC.sendFrame(frame.clone(), wavelength);
+					}
+				}
+			}
+			
+		}
+		else{
+			flag = nic.getIsClockwise();
+			for(int i:destinationNextHop.get(wavelength)){
+				OpticalNICTA NIC = NICs.get(i);
+				if(NIC.getIsClockwise()==flag && ! NIC.getHasError() ){
+					NIC.sendFrame(frame.clone(), wavelength);
+					send = true;
+				}
+			}
+			if(!send){
+				int i=0;		
+				for(OpticalNICTA NIC:NICs){
+					if(destinationNextHop.get(wavelength).contains(i++)){
+						continue;
+					}
+					if(NIC.getIsClockwise()==flag && ! NIC.getHasError()&&!NIC.equals(nic) ){
+						NIC.sendFrame(frame.clone(), wavelength);
+					}
+				}
+			}
+		}
 	}
 }
