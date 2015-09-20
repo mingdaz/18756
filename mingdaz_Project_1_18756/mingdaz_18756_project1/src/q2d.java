@@ -34,31 +34,44 @@ public class q2c {
 		router3.addDestinationFrequency("33:44:55", 1550);
 				
 		// Create an interface for each router
+		// working NIC,clockwise true
 		OpticalNICTA nicRouter121 = new OpticalNICTA(router1);
 		nicRouter121.setID(121);
+		nicRouter121.setClockwise(true);	
 		OpticalNICTA nicRouter131 = new OpticalNICTA(router1);
 		nicRouter131.setID(131);
+		nicRouter131.setClockwise(true);
 		OpticalNICTA nicRouter211 = new OpticalNICTA(router2);
 		nicRouter211.setID(211);
+		nicRouter211.setClockwise(true);
 		OpticalNICTA nicRouter231 = new OpticalNICTA(router2);
 		nicRouter231.setID(231);
+		nicRouter231.setClockwise(true);
 		OpticalNICTA nicRouter311 = new OpticalNICTA(router3);
 		nicRouter311.setID(311);
+		nicRouter311.setClockwise(true);
 		OpticalNICTA nicRouter321 = new OpticalNICTA(router3);
 		nicRouter321.setID(321);
-		
+		nicRouter321.setClockwise(true);
+		// protection NIC, clockwise false
 		OpticalNICTA nicRouter122 = new OpticalNICTA(router1);
 		nicRouter122.setID(122);
+		nicRouter121.setClockwise(false);
 		OpticalNICTA nicRouter132 = new OpticalNICTA(router1);
 		nicRouter132.setID(132);
+		nicRouter121.setClockwise(false);
 		OpticalNICTA nicRouter212 = new OpticalNICTA(router2);
 		nicRouter212.setID(212);
+		nicRouter121.setClockwise(false);
 		OpticalNICTA nicRouter232 = new OpticalNICTA(router2);
 		nicRouter232.setID(232);
+		nicRouter121.setClockwise(false);
 		OpticalNICTA nicRouter312 = new OpticalNICTA(router3);
 		nicRouter312.setID(312);
+		nicRouter121.setClockwise(false);
 		OpticalNICTA nicRouter322 = new OpticalNICTA(router3);
 		nicRouter322.setID(322);
+		nicRouter121.setClockwise(false);
 		
 		// Create two-uni directional links between the routers
 		// Create ring 1
@@ -77,6 +90,10 @@ public class q2c {
 		OtoOLink TwoToThree2 = new OtoOLink(nicRouter232, nicRouter322);
 		OtoOLink ThreeToTwo2 = new OtoOLink(nicRouter322, nicRouter232);
 	
+		/*
+		 * Sent a frame on the network
+		 */
+		router1.source(new SONETFrame(new SPE(0)), 1490);
 	}
 	
 	public static void main(String args[]){
