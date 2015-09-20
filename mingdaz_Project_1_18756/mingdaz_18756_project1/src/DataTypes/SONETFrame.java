@@ -19,7 +19,7 @@ public class SONETFrame extends SONETFrameTA{
 	
 	public SONETFrame clone(){
 		SONETFrame newframe = new SONETFrame(this.getSPE().clone());
-		newframe.delay = this.delay;
+		newframe.delay = 0;
 		newframe.setOAMFlags(this.getOAMFlags());
         return newframe;
 	}
