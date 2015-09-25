@@ -22,13 +22,27 @@ public class SONETRouter extends SONETRouterTA{
 	 */
 	public void receiveFrame(SONETFrame frame, int wavelength, OpticalNICTA nic){
 		if(destinationFrequencies.values().contains(wavelength)){
-			// check if  the frame is on the router drop frequency 
+			// check if  the frame is on the router drop frequency
+			String flag = frame.getOAMFlags();
+
 			if(dropFrequency.contains(wavelength)){
 			// if so, check if the frame is also the router destination frequency 
+//				if(flag!=""){
+//					String[] s = flag.split(":");
+//					int hop = Integer.parseInt(s[1]);
+//					int freq = Integer.parseInt(s[0]);
+//				}
 				sink(frame,wavelength);
 			}
 			else{
 				// if the frequency does not match any drop frequency then we forward it. 
+//				if(flag!=""){
+//					String[] s = flag.split(":");
+//					int hop = Integer.parseInt(s[1]);
+//					hop++;
+//					s[1] = Integer.toString(hop);
+//					frame.setOAMFlags(s[0]+":"+s[1]);
+//				}
 				sendRingFrameOp(frame,wavelength,nic);	
 			}
 		}
