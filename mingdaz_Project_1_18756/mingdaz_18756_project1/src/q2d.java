@@ -199,6 +199,8 @@ public class q2d {
 		System.out.println("test6:");
 		OneToThree1.cutLink();
 		ThreeToOne1.cutLink();
+		OneToTwo2.cutLink();
+		TwoToOne2.cutLink();
 		ThreeToTwo1.uncutLink();
 		TwoToThree1.uncutLink();
 		ThreeToTwo2.uncutLink();
