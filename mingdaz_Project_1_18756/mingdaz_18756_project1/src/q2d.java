@@ -133,6 +133,25 @@ public class q2d {
 		nicRouter322.setInLink(TwoToThree2);
 		nicRouter322.setOutLink(ThreeToTwo2);
 		
+		// tell router 1 the nexthop
+		router1.addDestinationHopCount(1490, new ArrayList<Integer>(Arrays.asList(0,0,0,0)));
+		router1.addDestinationHopCount(1550, new ArrayList<Integer>(Arrays.asList(0,0,0,0)));
+		// tell router 2 the nexthop
+		router2.addDestinationHopCount(1310, new ArrayList<Integer>(Arrays.asList(0,0,0,0)));
+		router2.addDestinationHopCount(1550, new ArrayList<Integer>(Arrays.asList(0,0,0,0)));
+		// tell router 3 the nexthop
+		router3.addDestinationHopCount(1310, new ArrayList<Integer>(Arrays.asList(0,0,0,0)));
+		router3.addDestinationHopCount(1490, new ArrayList<Integer>(Arrays.asList(0,0,0,0)));
+		
+		System.out.println("Create hop table:");
+		router1.source(new SONETFrame(new SPE(0),"1310:0"), 1490);
+		router1.source(new SONETFrame(new SPE(0),"1310:0"), 1550);
+		router2.source(new SONETFrame(new SPE(0),"1490:0"), 1310);
+		router2.source(new SONETFrame(new SPE(0),"1490:0"), 1550);
+		router3.source(new SONETFrame(new SPE(0),"1550:0"), 1310);
+		router3.source(new SONETFrame(new SPE(0),"1550:0"), 1490);
+		System.out.println("---------------------------------");
+		
 		
 		// tell router 1 the nexthop
 		router1.addDestinationHopCount(1490, new ArrayList<Integer>(Arrays.asList(1,2,1,2)));

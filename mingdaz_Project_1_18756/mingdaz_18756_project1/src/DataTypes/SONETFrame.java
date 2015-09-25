@@ -8,6 +8,11 @@ public class SONETFrame extends SONETFrameTA{
 	public SONETFrame(SPE spe){
 		super(spe);
 	}
+	
+	public SONETFrame(SPE spe,String flag){
+		super(spe);
+		this.setOAMFlags(flag);
+	}
 
 	/**
 	 * Increases the delay that this frame has encountered during it's travel
