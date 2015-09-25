@@ -57,70 +57,90 @@ public class SONETRouter extends SONETRouterTA{
 		// except the one it was received on. Basically what UPSR does
 		Boolean send = false;
 		Boolean flag = true;
+		ArrayList<Integer> hopcount = destinationNextHop.get(wavelength); 
+		int i=0;
+		int h;
+		
 		if(nic==null){
 			Boolean send1 = false;
 			Boolean flag1 = true;
 			Boolean send2 = false;
 			Boolean flag2 = false;
-			
-			for(int i:destinationNextHop.get(wavelength)){
-				OpticalNICTA NIC = NICs.get(i);
-				if(NIC.getIsClockwise()==flag1 && ! NIC.getHasError() ){
-					NIC.sendFrame(frame.clone(), wavelength);
-					send1 = true;
-				}
-			}
-			for(int i:destinationNextHop.get(wavelength)){
-				OpticalNICTA NIC = NICs.get(i);
-				if(NIC.getIsClockwise()==flag2 && ! NIC.getHasError() ){
-					NIC.sendFrame(frame.clone(), wavelength);
-					send2 = true;
-				}
-			}
-
-			if(!send1){
-				int i=0;		
-				for(OpticalNICTA NIC:NICs){
-					if(destinationNextHop.get(wavelength).contains(i++)){
-						continue;
-					}
-					if(NIC.getIsClockwise()==flag1 && ! NIC.getHasError() && !NIC.equals(nic) ){
+			i=0;
+			for(OpticalNICTA NIC:NICs){
+				h = hopcount.get(i);
+				if(h<=1){
+					if(NIC.getIsClockwise()==flag1 && ! NIC.getHasError()&&!NIC.equals(nic) ){
 						NIC.sendFrame(frame.clone(), wavelength);
+						send1 = true;
 					}
 				}
+				i++;
 			}
+			i=0;
+			for(OpticalNICTA NIC:NICs){
+				h = hopcount.get(i);
+				if(h<=1){
+					if(NIC.getIsClockwise()==flag2 && ! NIC.getHasError()&&!NIC.equals(nic) ){
+						NIC.sendFrame(frame.clone(), wavelength);
+						send2 = true;
+					}
+				}
+				i++;
+			}
+			
+			if(!send1){
+				i=0;		
+				for(OpticalNICTA NIC:NICs){
+					h = hopcount.get(i);
+					if(h==2){
+						if(NIC.getIsClockwise()==flag1 && ! NIC.getHasError()&&!NIC.equals(nic) ){
+							NIC.sendFrame(frame.clone(), wavelength);
+						}
+					}
+					i++;
+				}
+			}
+			
 			
 			if(!send2){
-				int i=0;		
+				i=0;		
 				for(OpticalNICTA NIC:NICs){
-					if(destinationNextHop.get(wavelength).contains(i++)){
-						continue;
+					h = hopcount.get(i);
+					if(h==2){
+						if(NIC.getIsClockwise()==flag2 && ! NIC.getHasError()&&!NIC.equals(nic) ){
+							NIC.sendFrame(frame.clone(), wavelength);
+						}
 					}
-					if(NIC.getIsClockwise()==flag2 && ! NIC.getHasError() &&!NIC.equals(nic) ){
-						NIC.sendFrame(frame.clone(), wavelength);
-					}
+					i++;
 				}
 			}
+			
 			
 		}
 		else{
 			flag = nic.getIsClockwise();
-			for(int i:destinationNextHop.get(wavelength)){
-				OpticalNICTA NIC = NICs.get(i);
-				if(NIC.getIsClockwise()==flag && ! NIC.getHasError() ){
-					NIC.sendFrame(frame.clone(), wavelength);
-					send = true;
-				}
-			}
-			if(!send){
-				int i=0;		
-				for(OpticalNICTA NIC:NICs){
-					if(destinationNextHop.get(wavelength).contains(i++)){
-						continue;
-					}
+			i=0;
+			for(OpticalNICTA NIC:NICs){
+				h = hopcount.get(i);
+				if(h<=1){
 					if(NIC.getIsClockwise()==flag && ! NIC.getHasError()&&!NIC.equals(nic) ){
 						NIC.sendFrame(frame.clone(), wavelength);
+						send = true;
 					}
+				}
+				i++;
+			}
+			if(!send){
+				i=0;		
+				for(OpticalNICTA NIC:NICs){
+					h = hopcount.get(i);
+					if(h==2){
+						if(NIC.getIsClockwise()==flag && ! NIC.getHasError()&&!NIC.equals(nic) ){
+							NIC.sendFrame(frame.clone(), wavelength);
+						}
+					}
+					i++;
 				}
 			}
 		}
