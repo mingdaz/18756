@@ -27,23 +27,31 @@ public class SONETRouter extends SONETRouterTA{
 
 			if(dropFrequency.contains(wavelength)){
 			// if so, check if the frame is also the router destination frequency 
-//				if(flag!=""){
-//					String[] s = flag.split(":");
-//					int hop = Integer.parseInt(s[1]);
-//					int freq = Integer.parseInt(s[0]);
-//				}
+				if(flag!=""){
+					String[] s = flag.split(":");
+					int hop = Integer.parseInt(s[1]);
+					int freq = Integer.parseInt(s[0]);
+					int ind = NICs.indexOf(nic);
+					ArrayList<Integer> a = destinationNextHop.get(freq);
+					a.set(ind,hop);
+					this.addDestinationHopCount(freq,a);
+				}
 				sink(frame,wavelength);
 			}
 			else{
 				// if the frequency does not match any drop frequency then we forward it. 
-//				if(flag!=""){
-//					String[] s = flag.split(":");
-//					int hop = Integer.parseInt(s[1]);
-//					hop++;
-//					s[1] = Integer.toString(hop);
-//					frame.setOAMFlags(s[0]+":"+s[1]);
-//				}
-				sendRingFrameOp(frame,wavelength,nic);	
+				if(flag!=""){
+					String[] s = flag.split(":");
+					int hop = Integer.parseInt(s[1]);
+					hop++;
+					s[1] = Integer.toString(hop);
+					frame.setOAMFlags(s[0]+":"+s[1]);
+				}
+				//for q2d please use this method;
+				sendRingFrameq2d(frame,wavelength,nic);	
+				//for previous question please use 
+//				sendRingFrame(frame,wavelength,nic);
+				
 			}
 		}
 		else{
@@ -66,11 +74,12 @@ public class SONETRouter extends SONETRouterTA{
 				NIC.sendFrame(frame.clone(), wavelength);
 	}
 	
-	public void sendRingFrameOp(SONETFrame frame, int wavelength, OpticalNICTA nic){
+	public void sendRingFrameq2d(SONETFrame frame, int wavelength, OpticalNICTA nic){
 		// Loop through the interfaces sending the frame on interfaces that are on the ring
 		// except the one it was received on. Basically what UPSR does
 		Boolean send = false;
 		Boolean flag = true;
+		Boolean setup = (frame.getOAMFlags() != "");
 		ArrayList<Integer> hopcount = destinationNextHop.get(wavelength); 
 		int i=0;
 		int h;
@@ -103,7 +112,7 @@ public class SONETRouter extends SONETRouterTA{
 				i++;
 			}
 			
-			if(!send1){
+			if(!send1||setup){
 				i=0;		
 				for(OpticalNICTA NIC:NICs){
 					h = hopcount.get(i);
@@ -117,7 +126,7 @@ public class SONETRouter extends SONETRouterTA{
 			}
 			
 			
-			if(!send2){
+			if(!send2||setup){
 				i=0;		
 				for(OpticalNICTA NIC:NICs){
 					h = hopcount.get(i);
@@ -145,7 +154,7 @@ public class SONETRouter extends SONETRouterTA{
 				}
 				i++;
 			}
-			if(!send){
+			if(!send||setup){
 				i=0;		
 				for(OpticalNICTA NIC:NICs){
 					h = hopcount.get(i);

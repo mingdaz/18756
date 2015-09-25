@@ -133,6 +133,7 @@ public class q2d {
 		nicRouter322.setInLink(TwoToThree2);
 		nicRouter322.setOutLink(ThreeToTwo2);
 		
+		//initial hop table
 		// tell router 1 the nexthop
 		router1.addDestinationHopCount(1490, new ArrayList<Integer>(Arrays.asList(0,0,0,0)));
 		router1.addDestinationHopCount(1550, new ArrayList<Integer>(Arrays.asList(0,0,0,0)));
@@ -154,14 +155,14 @@ public class q2d {
 		
 		
 		// tell router 1 the nexthop
-		router1.addDestinationHopCount(1490, new ArrayList<Integer>(Arrays.asList(1,2,1,2)));
-		router1.addDestinationHopCount(1550, new ArrayList<Integer>(Arrays.asList(2,1,2,1)));
-		// tell router 2 the nexthop
-		router2.addDestinationHopCount(1310, new ArrayList<Integer>(Arrays.asList(1,2,1,2)));
-		router2.addDestinationHopCount(1550, new ArrayList<Integer>(Arrays.asList(2,1,2,1)));
-		// tell router 3 the nexthop
-		router3.addDestinationHopCount(1310, new ArrayList<Integer>(Arrays.asList(1,2,1,2)));
-		router3.addDestinationHopCount(1490, new ArrayList<Integer>(Arrays.asList(2,1,2,1)));
+//		router1.addDestinationHopCount(1490, new ArrayList<Integer>(Arrays.asList(1,2,1,2)));
+//		router1.addDestinationHopCount(1550, new ArrayList<Integer>(Arrays.asList(2,1,2,1)));
+//		// tell router 2 the nexthop
+//		router2.addDestinationHopCount(1310, new ArrayList<Integer>(Arrays.asList(1,2,1,2)));
+//		router2.addDestinationHopCount(1550, new ArrayList<Integer>(Arrays.asList(2,1,2,1)));
+//		// tell router 3 the nexthop
+//		router3.addDestinationHopCount(1310, new ArrayList<Integer>(Arrays.asList(1,2,1,2)));
+//		router3.addDestinationHopCount(1490, new ArrayList<Integer>(Arrays.asList(2,1,2,1)));
 		
 		/*
 		 * Sent a frame on the network
