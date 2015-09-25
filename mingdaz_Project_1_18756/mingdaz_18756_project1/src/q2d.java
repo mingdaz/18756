@@ -65,15 +65,7 @@ public class q2d {
 		OpticalNICTA nicRouter322 = new OpticalNICTA(router3);
 		nicRouter322.setID(322);
 		
-		// tell router 1 the nexthop
-		router1.addDestinationHopCount(1490, new ArrayList<Integer>(Arrays.asList(0,2)));
-		router1.addDestinationHopCount(1550, new ArrayList<Integer>(Arrays.asList(1,3)));
-		// tell router 2 the nexthop
-		router2.addDestinationHopCount(1310, new ArrayList<Integer>(Arrays.asList(0,2)));
-		router2.addDestinationHopCount(1550, new ArrayList<Integer>(Arrays.asList(1,3)));
-		// tell router 3 the nexthop
-		router3.addDestinationHopCount(1310, new ArrayList<Integer>(Arrays.asList(0,2)));
-		router3.addDestinationHopCount(1490, new ArrayList<Integer>(Arrays.asList(1,3)));
+
 		
 		//set direction
 		nicRouter121.setClockwise(true);
@@ -140,6 +132,17 @@ public class q2d {
 		nicRouter321.setOutLink(ThreeToTwo1);
 		nicRouter322.setInLink(TwoToThree2);
 		nicRouter322.setOutLink(ThreeToTwo2);
+		
+		
+		// tell router 1 the nexthop
+		router1.addDestinationHopCount(1490, new ArrayList<Integer>(Arrays.asList(1,2,1,2)));
+		router1.addDestinationHopCount(1550, new ArrayList<Integer>(Arrays.asList(2,1,2,1)));
+		// tell router 2 the nexthop
+		router2.addDestinationHopCount(1310, new ArrayList<Integer>(Arrays.asList(1,2,1,2)));
+		router2.addDestinationHopCount(1550, new ArrayList<Integer>(Arrays.asList(2,1,2,1)));
+		// tell router 3 the nexthop
+		router3.addDestinationHopCount(1310, new ArrayList<Integer>(Arrays.asList(1,2,1,2)));
+		router3.addDestinationHopCount(1490, new ArrayList<Integer>(Arrays.asList(2,1,2,1)));
 		
 		/*
 		 * Sent a frame on the network
