@@ -58,40 +58,45 @@ public class SONETRouter extends SONETRouterTA{
 		Boolean send = false;
 		Boolean flag = true;
 		if(nic==null){
+			Boolean send1 = false;
+			Boolean flag1 = true;
+			Boolean send2 = false;
+			Boolean flag2 = false;
+			
 			for(int i:destinationNextHop.get(wavelength)){
 				OpticalNICTA NIC = NICs.get(i);
-				if(NIC.getIsClockwise()==flag && ! NIC.getHasError() ){
+				if(NIC.getIsClockwise()==flag1 && ! NIC.getHasError() ){
 					NIC.sendFrame(frame.clone(), wavelength);
-					send = true;
+					send1 = true;
 				}
 			}
-			if(!send){
+			for(int i:destinationNextHop.get(wavelength)){
+				OpticalNICTA NIC = NICs.get(i);
+				if(NIC.getIsClockwise()==flag2 && ! NIC.getHasError() ){
+					NIC.sendFrame(frame.clone(), wavelength);
+					send2 = true;
+				}
+			}
+
+			if(!send1){
 				int i=0;		
 				for(OpticalNICTA NIC:NICs){
 					if(destinationNextHop.get(wavelength).contains(i++)){
 						continue;
 					}
-					if(NIC.getIsClockwise()==flag && ! NIC.getHasError() && !NIC.equals(nic) ){
+					if(NIC.getIsClockwise()==flag1 && ! NIC.getHasError() && !NIC.equals(nic) ){
 						NIC.sendFrame(frame.clone(), wavelength);
 					}
 				}
 			}
-			send = false;
-			flag = false;
-			for(int i:destinationNextHop.get(wavelength)){
-				OpticalNICTA NIC = NICs.get(i);
-				if(NIC.getIsClockwise()==flag && ! NIC.getHasError() ){
-					NIC.sendFrame(frame.clone(), wavelength);
-					send = true;
-				}
-			}
-			if(!send){
+			
+			if(!send2){
 				int i=0;		
 				for(OpticalNICTA NIC:NICs){
 					if(destinationNextHop.get(wavelength).contains(i++)){
 						continue;
 					}
-					if(NIC.getIsClockwise()==flag && ! NIC.getHasError() &&!NIC.equals(nic) ){
+					if(NIC.getIsClockwise()==flag2 && ! NIC.getHasError() &&!NIC.equals(nic) ){
 						NIC.sendFrame(frame.clone(), wavelength);
 					}
 				}
