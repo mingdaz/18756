@@ -2,6 +2,7 @@ package NetworkElements;
 
 import java.util.*;
 import java.net.*;
+
 import DataTypes.*;
 
 public class IPRouter implements IPConsumer{
@@ -13,8 +14,10 @@ public class IPRouter implements IPConsumer{
 	private int lastNicServiced=-1, weightFulfilled=1;
 	// remembering the queue rather than the interface number is useful for wfq
 	private FIFOQueue lastServicedQueue = null;
+	private FIFOQueue fifoQueue = null;
+	private int lastServicedSize = 0; 
 	private double virtualTime = 0.0;
-	
+	private IPPacket lastServerPacket = null;
 	/**
 	 * The default constructor of a router
 	 */
@@ -37,8 +40,19 @@ public class IPRouter implements IPConsumer{
 	 * @param nic the nic the packet was received on
 	 */
 	public void receivePacket(IPPacket packet, IPNIC nic){
-		this.forwardPacket(packet);
-		
+//		this.forwardPacket(packet);
+		if(this.rr){
+			if(this.inputQueues.containsKey(nic)){
+				this.inputQueues.get(nic).offer(packet);
+			}else{
+				FIFOQueue q = new FIFOQueue();
+				q.offer(packet);
+				this.inputQueues.put(nic,q);
+			}
+		}
+		if (this.fifo){
+			this.fifoQueue.offer(packet);
+		}
 		// If wfq set the expected finish time
 		if(this.wfq){
 			
@@ -78,7 +92,27 @@ public class IPRouter implements IPConsumer{
 	 * Perform FIFO scheduler on the queue
 	 */
 	private void fifo(){
-
+//		private IPPacket lasServerPacket = null;
+//		private int lastServicedSize = 0; 
+		if(this.lastServicedSize == 0 ){
+			while(this.lastServicedSize == 0){
+				this.lastServerPacket = this.fifoQueue.peek();
+				if (this.lastServerPacket ==null) break;
+				this.lastServicedSize = this.lastServerPacket.getSize();
+				if(this.lastServicedSize == 0 ){
+					this.forwardPacket(this.lastServerPacket);
+				}
+			}
+			if(this.lastServicedSize != 0 ){
+				this.lastServicedSize --;
+			}
+		} else{
+			this.lastServicedSize --;
+		}
+		if(this.lastServicedSize == 0 && this.lastServerPacket!=null){
+			this.forwardPacket(this.lastServerPacket);
+			this.fifoQueue.remove();
+		}
 	}
 	
 	/**
@@ -142,7 +176,9 @@ public class IPRouter implements IPConsumer{
 				queue.tock();
 			}
 		}
-		
+		if(this.fifo){
+			this.fifoQueue.tock();
+		}
 		// calculate the new virtual time for the next round
 		if(this.wfq){
 			
@@ -162,7 +198,7 @@ public class IPRouter implements IPConsumer{
 		this.wfq = false;
 		
 		// Setup router for FIFO under here
-		
+		this.fifoQueue = new FIFOQueue();
 	}
 	
 	/**
