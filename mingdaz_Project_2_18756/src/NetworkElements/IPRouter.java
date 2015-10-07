@@ -14,10 +14,19 @@ public class IPRouter implements IPConsumer{
 	private int lastNicServiced=-1, weightFulfilled=1;
 	// remembering the queue rather than the interface number is useful for wfq
 	private FIFOQueue lastServicedQueue = null;
+	private double virtualTime = 0.0;
+	
+	// self define variable for fifo
+	private IPPacket lastServerPacket = null;
 	private FIFOQueue fifoQueue = null;
 	private int lastServicedSize = 0; 
-	private double virtualTime = 0.0;
-	private IPPacket lastServerPacket = null;
+	
+	// self define variable for bit-round robin
+//	private int lastservenic = 0;
+	private Iterator<FIFOQueue> rr_queues;
+	private Iterator<Integer> rr_size;
+	private HashMap<IPNIC, Integer> rrQueue = new HashMap<IPNIC, Integer>();
+	
 	/**
 	 * The default constructor of a router
 	 */
@@ -48,6 +57,7 @@ public class IPRouter implements IPConsumer{
 				FIFOQueue q = new FIFOQueue();
 				q.offer(packet);
 				this.inputQueues.put(nic,q);
+				this.rrQueue.put(nic,0);
 			}
 		}
 		if (this.fifo){
@@ -92,8 +102,7 @@ public class IPRouter implements IPConsumer{
 	 * Perform FIFO scheduler on the queue
 	 */
 	private void fifo(){
-//		private IPPacket lasServerPacket = null;
-//		private int lastServicedSize = 0; 
+		
 		if(this.lastServicedSize == 0 ){
 			while(this.lastServicedSize == 0){
 				this.lastServerPacket = this.fifoQueue.peek();
@@ -119,7 +128,60 @@ public class IPRouter implements IPConsumer{
 	 * Perform round robin on the queue
 	 */
 	private void rr(){
-
+//		private int lastNicServiced=-1, weightFulfilled=1;
+//		private Iterator<FIFOQueue> rr_queues;
+//		private Iterator<Integer> rr_size;
+//		private HashMap<IPNIC, Integer> rrQueue = new HashMap<IPNIC, Integer>();
+//		private HashMap<IPNIC, FIFOQueue> inputQueues = new HashMap<IPNIC, FIFOQueue>();
+//		private ArrayList<IPNIC> nics = new ArrayList<IPNIC>();
+		for(int i = 0;i<this.nics.size();i++){
+			if (this.lastNicServiced == this.nics.size()-1){
+				this.lastNicServiced = 0;
+			} else{
+				this.lastNicServiced ++;
+			}
+			IPNIC nic = this.nics.get(this.lastNicServiced);
+			if(!this.inputQueues.containsKey(nic)){
+				continue;
+			}
+			// not packet need to server
+			if(this.inputQueues.get(nic).peek()==null){
+				this.rrQueue.put(nic,0);
+				continue;
+			}
+			int remainsize = this.rrQueue.get(nic);
+			if (remainsize==0){
+				IPPacket servepacket = this.inputQueues.get(nic).peek();
+				remainsize = servepacket.getSize()-1;
+			}else{
+				remainsize--;
+			}
+			if(remainsize == 0 ){
+				this.forwardPacket(this.inputQueues.get(nic).remove());
+			}
+			this.rrQueue.put(nic,remainsize);
+			break;
+		}
+		
+//		if(this.lastServicedSize == 0 ){
+//			while(this.lastServicedSize == 0){
+//				this.lastServerPacket = this.fifoQueue.peek();
+//				if (this.lastServerPacket ==null) break;
+//				this.lastServicedSize = this.lastServerPacket.getSize();
+//				if(this.lastServicedSize == 0 ){
+//					this.forwardPacket(this.lastServerPacket);
+//				}
+//			}
+//			if(this.lastServicedSize != 0 ){
+//				this.lastServicedSize --;
+//			}
+//		} else{
+//			this.lastServicedSize --;
+//		}
+//		if(this.lastServicedSize == 0 && this.lastServerPacket!=null){
+//			this.forwardPacket(this.lastServerPacket);
+//			this.fifoQueue.remove();
+//		}
 	}
 	
 	/**
@@ -211,7 +273,7 @@ public class IPRouter implements IPConsumer{
 		this.wfq = false;
 		
 		// Setup router for Round Robin under here
-		
+		this.lastNicServiced =  this.nics.size()-1;
 	}
 	
 	/**
