@@ -28,6 +28,16 @@ public class IPRouter implements IPConsumer{
 	
 	// self define variable for weight rr
 	private HashMap<IPNIC, Integer> remainWQueue = new HashMap<IPNIC, Integer>();
+	
+	// self define variable for wfq
+	private IPNIC minNic;
+	private HashMap<IPNIC, Double> finishtime = new HashMap<IPNIC, Double>();
+	
+//	private PriorityQueue<IPPacket> minQueue= new PriorityQueue<IPPacket>(10, new Comparator<IPPacket>() {
+//        public int compare(IPPacket p1, IPPacket p2) {
+//            return (int) (p1.getFinishTime()-p2.getFinishTime());
+//        }
+//    });
 	/**
 	 * The default constructor of a router
 	 */
@@ -54,23 +64,25 @@ public class IPRouter implements IPConsumer{
 		if(this.rr){
 			if(this.inputQueues.containsKey(nic)){
 				this.inputQueues.get(nic).offer(packet);
-			}else{
-				FIFOQueue q = new FIFOQueue();
-				q.offer(packet);
-				this.inputQueues.put(nic,q);
-				this.rrQueue.put(nic,0);
 			}
+//			else{
+//				FIFOQueue q = new FIFOQueue();
+//				q.offer(packet);
+//				this.inputQueues.put(nic,q);
+//				this.rrQueue.put(nic,0);
+//			}
 		}
 		if(this.wrr){
 			if(this.inputQueues.containsKey(nic)){
 				this.inputQueues.get(nic).offer(packet);
-			}else{
-				FIFOQueue q = new FIFOQueue();
-				q.offer(packet);
-				this.inputQueues.put(nic,q);
-				this.rrQueue.put(nic,0);
-				this.remainWQueue.put(nic,0);
 			}
+//			else{
+//				FIFOQueue q = new FIFOQueue();
+//				q.offer(packet);
+//				this.inputQueues.put(nic,q);
+//				this.rrQueue.put(nic,0);
+//				this.remainWQueue.put(nic,0);
+//			}
 		}
 		
 		if (this.fifo){
@@ -78,7 +90,24 @@ public class IPRouter implements IPConsumer{
 		}
 		// If wfq set the expected finish time
 		if(this.wfq){
-			
+			double size = packet.getSize();
+			double weight = this.inputQueues.get(nic).getWeight();
+			double finish,prev=0;
+			if(this.inputQueues.containsKey(nic)){
+				prev = this.finishtime.get(nic);
+				finish = Math.max(prev,this.virtualTime) + size/weight;
+				packet.setFinishTime(finish);
+				this.finishtime.put(nic,finish);
+				this.inputQueues.get(nic).offer(packet);
+			}
+//			else{
+//				FIFOQueue q = new FIFOQueue();
+//				
+//				q.offer(packet);
+//				this.inputQueues.put(nic,q);
+//				this.rrQueue.put(nic,0);
+//				this.remainWQueue.put(nic,0);
+//			}
 		}
 	}
 	
@@ -317,8 +346,38 @@ public class IPRouter implements IPConsumer{
 	 * Perform weighted fair queuing on the queue
 	 */
 	private void wfq(){
+		IPNIC nic;
+		double min = Double.POSITIVE_INFINITY;
+		double ft;
+		Boolean load = true;
+		if(this.lastServicedSize <= 0 ){
+//-------------------------------------------------------
+			load = false;
+			for(int i = 0;i<this.nics.size();i++){
+				nic = this.nics.get(i);
+				if(this.inputQueues.get(nic).peek()!=null){
+					load = true;
+					ft = this.inputQueues.get(nic).peek().getFinishTime();
+					if(ft<min){
+						min = ft;
+						this.minNic = nic;
+					}
+				}
+			}
+//-------------------------------------------------------
+			if(load)
+				this.lastServicedSize = this.inputQueues.get(this.minNic).peek().getSize()-1;
+			else
+				this.lastServicedSize = 0;
 
-	}
+		} 
+		else{
+			this.lastServicedSize --;
+		}
+		if(this.lastServicedSize <= 0 && load){
+			this.forwardPacket(this.inputQueues.get(this.minNic).remove());
+		}
+}
 	
 	/**
 	 * adds a nic to the consumer 
@@ -353,12 +412,14 @@ public class IPRouter implements IPConsumer{
 		this.time+=1;
 		
 		// Add 1 delay to all packets in queues
-		ArrayList<FIFOQueue> delayedQueues = new ArrayList<FIFOQueue>();
-		for(Iterator<FIFOQueue> queues = this.inputQueues.values().iterator(); queues.hasNext();){
-			FIFOQueue queue = queues.next();
-			if(!delayedQueues.contains(queue)){
-				delayedQueues.add(queue);
-				queue.tock();
+		if(this.rr || this.wrr || this.wfq){
+			ArrayList<FIFOQueue> delayedQueues = new ArrayList<FIFOQueue>();
+			for(Iterator<FIFOQueue> queues = this.inputQueues.values().iterator(); queues.hasNext();){
+				FIFOQueue queue = queues.next();
+				if(!delayedQueues.contains(queue)){
+					delayedQueues.add(queue);
+					queue.tock();
+				}
 			}
 		}
 		if(this.fifo){
@@ -366,7 +427,14 @@ public class IPRouter implements IPConsumer{
 		}
 		// calculate the new virtual time for the next round
 		if(this.wfq){
-			
+			double weight = 0.0;
+			for(Iterator<FIFOQueue> queues = this.inputQueues.values().iterator(); queues.hasNext();){
+				FIFOQueue queue = queues.next();
+				if(queue.peek()!=null){
+					weight += queue.getWeight();
+				}
+			}
+			this.virtualTime += 1.0/weight;
 		}
 		
 		// route bit for this round
@@ -439,9 +507,9 @@ public class IPRouter implements IPConsumer{
 			FIFOQueue q = new FIFOQueue();
 			IPNIC nic = this.nics.get(i);
 			this.inputQueues.put(nic,q);
-			this.rrQueue.put(nic,0);
-			this.remainWQueue.put(nic,0);
+			this.finishtime.put(nic,0.0);
 		}
+		this.lastServicedSize = 0;
 	}
 	
 	/**
