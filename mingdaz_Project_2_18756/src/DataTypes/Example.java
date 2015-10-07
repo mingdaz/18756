@@ -65,13 +65,13 @@ public class Example {
 		 * (Computer): Received a packet 10.0.0.1 > 10.0.0.2 took 70 time
 		 * (Computer): Received a packet 10.0.0.1 > 10.0.0.3 took 120 time
 		 */
-//		router.setIsRoundRobin();
-//		router.setRouteEntirePacket(false);
-//		hostA.sendPacket("10.0.0.2", 50);
-//		hostA.sendPacket("10.0.0.3", 50);
-//		hostB.sendPacket("10.0.0.1", 20);
-//		for(int i=0; i<200; i++)
-//			router.tock();
+		router.setIsRoundRobin();
+		router.setRouteEntirePacket(false);
+		hostA.sendPacket("10.0.0.2", 50);
+		hostA.sendPacket("10.0.0.3", 50);
+		hostB.sendPacket("10.0.0.1", 20);
+		for(int i=0; i<200; i++)
+			router.tock();
 		
 		/*
 		 * Remove comment marks to test RR, packet-by-packet
@@ -154,29 +154,29 @@ public class Example {
 		(Computer): Received a packet 10.0.0.3 > 10.0.0.4 took 35 time
 
 		 */
-		router.setIsWeightedFairQueuing();
-		router.setQueueWeight(routerNICA, 6);
-		router.setQueueWeight(routerNICB, 2);
-		hostA.sendPacket("10.0.0.2", 50);
-		hostA.sendPacket("10.0.0.3", 30);
-		hostB.sendPacket("10.0.0.1", 20);
-		for(int i=0; i<49; i++)
-			router.tock();
-		hostC.sendPacket("10.0.0.4", 1);
-		router.tock();
-		hostC.sendPacket("10.0.0.4", 1);
-		router.tock();
-		hostC.sendPacket("10.0.0.4", 1);
-		router.tock();
-		router.tock();
-		router.tock();
-		hostC.sendPacket("10.0.0.4", 1);
-		for(int i=0; i<20; i++)
-			router.tock();
-		hostC.sendPacket("10.0.0.4", 4);
-		hostC.sendPacket("10.0.0.4", 1);
-		for(int i=0; i<50; i++)
-			router.tock();
+//		router.setIsWeightedFairQueuing();
+//		router.setQueueWeight(routerNICA, 6);
+//		router.setQueueWeight(routerNICB, 2);
+//		hostA.sendPacket("10.0.0.2", 50);
+//		hostA.sendPacket("10.0.0.3", 30);
+//		hostB.sendPacket("10.0.0.1", 20);
+//		for(int i=0; i<49; i++)
+//			router.tock();
+//		hostC.sendPacket("10.0.0.4", 1);
+//		router.tock();
+//		hostC.sendPacket("10.0.0.4", 1);
+//		router.tock();
+//		hostC.sendPacket("10.0.0.4", 1);
+//		router.tock();
+//		router.tock();
+//		router.tock();
+//		hostC.sendPacket("10.0.0.4", 1);
+//		for(int i=0; i<20; i++)
+//			router.tock();
+//		hostC.sendPacket("10.0.0.4", 4);
+//		hostC.sendPacket("10.0.0.4", 1);
+//		for(int i=0; i<50; i++)
+//			router.tock();
 	}
 	
 	public static void main(String args[]){
