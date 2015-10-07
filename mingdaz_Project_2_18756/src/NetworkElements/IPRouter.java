@@ -22,11 +22,12 @@ public class IPRouter implements IPConsumer{
 	private int lastServicedSize = 0; 
 	
 	// self define variable for bit-round robin
-//	private int lastservenic = 0;
 	private Iterator<FIFOQueue> rr_queues;
 	private Iterator<Integer> rr_size;
 	private HashMap<IPNIC, Integer> rrQueue = new HashMap<IPNIC, Integer>();
 	
+	// self define variable for weight rr
+	private HashMap<IPNIC, Integer> remainWQueue = new HashMap<IPNIC, Integer>();
 	/**
 	 * The default constructor of a router
 	 */
@@ -60,6 +61,18 @@ public class IPRouter implements IPConsumer{
 				this.rrQueue.put(nic,0);
 			}
 		}
+		if(this.wrr){
+			if(this.inputQueues.containsKey(nic)){
+				this.inputQueues.get(nic).offer(packet);
+			}else{
+				FIFOQueue q = new FIFOQueue();
+				q.offer(packet);
+				this.inputQueues.put(nic,q);
+				this.rrQueue.put(nic,0);
+				this.remainWQueue.put(nic,0);
+			}
+		}
+		
 		if (this.fifo){
 			this.fifoQueue.offer(packet);
 		}
@@ -128,67 +141,176 @@ public class IPRouter implements IPConsumer{
 	 * Perform round robin on the queue
 	 */
 	private void rr(){
-//		private int lastNicServiced=-1, weightFulfilled=1;
-//		private Iterator<FIFOQueue> rr_queues;
-//		private Iterator<Integer> rr_size;
-//		private HashMap<IPNIC, Integer> rrQueue = new HashMap<IPNIC, Integer>();
-//		private HashMap<IPNIC, FIFOQueue> inputQueues = new HashMap<IPNIC, FIFOQueue>();
-//		private ArrayList<IPNIC> nics = new ArrayList<IPNIC>();
-		for(int i = 0;i<this.nics.size();i++){
-			if (this.lastNicServiced == this.nics.size()-1){
+		IPNIC nic;
+		if(this.routeEntirePacket){
+			if (this.lastNicServiced == this.nics.size()){
 				this.lastNicServiced = 0;
-			} else{
-				this.lastNicServiced ++;
 			}
-			IPNIC nic = this.nics.get(this.lastNicServiced);
-			if(!this.inputQueues.containsKey(nic)){
-				continue;
+				
+			for(int i = 0;i<this.nics.size();i++){
+				
+				nic = this.nics.get(this.lastNicServiced);
+//				if(!this.inputQueues.containsKey(nic)){
+//					if (this.lastNicServiced == this.nics.size()-1){
+//						this.lastNicServiced = 0;
+//					} else{
+//						this.lastNicServiced ++;
+//					}
+//					continue;
+//				}
+				// not packet need to server
+				if(this.inputQueues.get(nic).peek()==null){
+					this.rrQueue.put(nic,0);
+					if (this.lastNicServiced == this.nics.size()-1){
+						this.lastNicServiced = 0;
+					} else{
+						this.lastNicServiced ++;
+					}
+					continue;
+				}
+				int remainsize = this.rrQueue.get(nic);
+				if (remainsize<=0){
+					IPPacket servepacket = this.inputQueues.get(nic).peek();
+					remainsize = servepacket.getSize()-1;
+				}else{
+					remainsize--;
+				}
+				this.rrQueue.put(nic,remainsize);
+				if(remainsize <= 0 ){
+					this.forwardPacket(this.inputQueues.get(nic).remove());
+					if (this.lastNicServiced == this.nics.size()-1){
+						this.lastNicServiced = 0;
+					} else{
+						this.lastNicServiced ++;
+					}
+					break;
+				}
+				
+				break;
 			}
-			// not packet need to server
-			if(this.inputQueues.get(nic).peek()==null){
-				this.rrQueue.put(nic,0);
-				continue;
+		}
+		else{
+			if (this.lastNicServiced == this.nics.size()){
+				this.lastNicServiced --;
 			}
-			int remainsize = this.rrQueue.get(nic);
-			if (remainsize==0){
-				IPPacket servepacket = this.inputQueues.get(nic).peek();
-				remainsize = servepacket.getSize()-1;
-			}else{
-				remainsize--;
+			for(int i = 0;i<this.nics.size();i++){
+				if (this.lastNicServiced == this.nics.size()-1){
+					this.lastNicServiced = 0;
+				} else{
+					this.lastNicServiced ++;
+				}
+				nic = this.nics.get(this.lastNicServiced);
+//				if(!this.inputQueues.containsKey(nic)){
+//					continue;
+//				}
+				// not packet need to server
+				if(this.inputQueues.get(nic).peek()==null){
+					this.rrQueue.put(nic,0);
+					continue;
+				}
+				int remainsize = this.rrQueue.get(nic);
+				if (remainsize<=0){
+					IPPacket servepacket = this.inputQueues.get(nic).peek();
+					remainsize = servepacket.getSize()-1;
+				}else{
+					remainsize--;
+				}
+				if(remainsize <= 0 ){
+					this.forwardPacket(this.inputQueues.get(nic).remove());
+				}
+				this.rrQueue.put(nic,remainsize);
+				break;
 			}
-			if(remainsize == 0 ){
-				this.forwardPacket(this.inputQueues.get(nic).remove());
-			}
-			this.rrQueue.put(nic,remainsize);
-			break;
+		
 		}
 		
-//		if(this.lastServicedSize == 0 ){
-//			while(this.lastServicedSize == 0){
-//				this.lastServerPacket = this.fifoQueue.peek();
-//				if (this.lastServerPacket ==null) break;
-//				this.lastServicedSize = this.lastServerPacket.getSize();
-//				if(this.lastServicedSize == 0 ){
-//					this.forwardPacket(this.lastServerPacket);
-//				}
-//			}
-//			if(this.lastServicedSize != 0 ){
-//				this.lastServicedSize --;
-//			}
-//		} else{
-//			this.lastServicedSize --;
-//		}
-//		if(this.lastServicedSize == 0 && this.lastServerPacket!=null){
-//			this.forwardPacket(this.lastServerPacket);
-//			this.fifoQueue.remove();
-//		}
 	}
 	
 	/**
 	 * Perform weighted round robin on the queue
 	 */
 	private void wrr(){
+		IPNIC nic;
+		if(this.routeEntirePacket){
+			for(int i = 0;i<this.nics.size();i++){
+				nic = this.nics.get(this.lastNicServiced);
+				
+				int remainsize = this.rrQueue.get(nic);
+				int remainweight = this.remainWQueue.get(nic);
+				
+				if(remainweight<=0&&remainsize<=0){
+					if (this.lastNicServiced == this.nics.size()-1){
+						this.lastNicServiced = 0;
+					} else{
+						this.lastNicServiced ++;
+					}
+					remainweight = this.inputQueues.get(nic).getWeight();
+					this.remainWQueue.put(nic,remainweight);
+				}
+				nic = this.nics.get(this.lastNicServiced);
 
+				if(this.inputQueues.get(nic).peek()==null){
+					this.rrQueue.put(nic,0);
+					this.remainWQueue.put(nic,0);
+					continue;
+				}
+				remainweight = this.remainWQueue.get(nic);
+				remainsize = this.rrQueue.get(nic);
+				if (remainsize<=0){
+					IPPacket servepacket = this.inputQueues.get(nic).peek();
+					remainsize = servepacket.getSize()-1;
+				}else{
+					remainsize--;
+				}
+				remainweight--;
+				if(remainsize <= 0 ){
+					this.forwardPacket(this.inputQueues.get(nic).remove());
+				}
+				this.rrQueue.put(nic,remainsize);
+				this.remainWQueue.put(nic,remainweight);
+				break;
+			}
+		}
+		else{
+			
+//			private HashMap<IPNIC, Integer> remainWQueue = new HashMap<IPNIC, Integer>();			
+			for(int i = 0;i<this.nics.size();i++){
+				nic = this.nics.get(this.lastNicServiced);
+				int remainweight = this.remainWQueue.get(nic);
+				if(remainweight<=0){
+					if (this.lastNicServiced == this.nics.size()-1){
+						this.lastNicServiced = 0;
+					} else{
+						this.lastNicServiced ++;
+					}
+					remainweight = this.inputQueues.get(nic).getWeight();
+					this.remainWQueue.put(nic,remainweight);
+				}
+				nic = this.nics.get(this.lastNicServiced);
+
+				if(this.inputQueues.get(nic).peek()==null){
+					this.rrQueue.put(nic,0);
+					this.remainWQueue.put(nic,0);
+					continue;
+				}
+				remainweight = this.remainWQueue.get(nic);
+				int remainsize = this.rrQueue.get(nic);
+				if (remainsize<=0){
+					IPPacket servepacket = this.inputQueues.get(nic).peek();
+					remainsize = servepacket.getSize()-1;
+				}else{
+					remainsize--;
+				}
+				remainweight--;
+				if(remainsize <= 0 ){
+					this.forwardPacket(this.inputQueues.get(nic).remove());
+				}
+				this.rrQueue.put(nic,remainsize);
+				this.remainWQueue.put(nic,remainweight);
+				break;
+			}
+		
+		}
 	}
 	
 	/**
@@ -217,9 +339,10 @@ public class IPRouter implements IPConsumer{
 	 * @param weight the weight of the queue
 	 */
 	public void setQueueWeight(IPNIC nic, int weight){
-		if(this.inputQueues.containsKey(nic))
+		if(this.inputQueues.containsKey(nic)){
 			this.inputQueues.get(nic).setWeight(weight);
-		
+			this.remainWQueue.put(nic,weight);
+		}
 		else System.err.println("(IPRouter) Error: The given NIC does not have a queue associated with it");
 	}
 	
@@ -273,7 +396,13 @@ public class IPRouter implements IPConsumer{
 		this.wfq = false;
 		
 		// Setup router for Round Robin under here
-		this.lastNicServiced =  this.nics.size()-1;
+		this.lastNicServiced =  this.nics.size();
+		for(int i =0;i<this.nics.size();i++){
+			FIFOQueue q = new FIFOQueue();
+			IPNIC nic = this.nics.get(i);
+			this.inputQueues.put(nic,q);
+			this.rrQueue.put(nic,0);
+		}
 	}
 	
 	/**
@@ -286,7 +415,14 @@ public class IPRouter implements IPConsumer{
 		this.wfq = false;
 		
 		// Setup router for Weighted Round Robin under here
-		
+		this.lastNicServiced =  0;
+		for(int i =0;i<this.nics.size();i++){
+			FIFOQueue q = new FIFOQueue();
+			IPNIC nic = this.nics.get(i);
+			this.inputQueues.put(nic,q);
+			this.rrQueue.put(nic,0);
+			this.remainWQueue.put(nic,0);
+		}
 	}
 	
 	/**
@@ -299,7 +435,13 @@ public class IPRouter implements IPConsumer{
 		this.wfq = true;
 		
 		// Setup router for Weighted Fair Queuing under here
-		
+		for(int i =0;i<this.nics.size();i++){
+			FIFOQueue q = new FIFOQueue();
+			IPNIC nic = this.nics.get(i);
+			this.inputQueues.put(nic,q);
+			this.rrQueue.put(nic,0);
+			this.remainWQueue.put(nic,0);
+		}
 	}
 	
 	/**
