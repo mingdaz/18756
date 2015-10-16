@@ -1,0 +1,1 @@
+When running the programm on my computer I have to put the example file in the 'DataTypes' folder. I hope this change would not effect the result.
