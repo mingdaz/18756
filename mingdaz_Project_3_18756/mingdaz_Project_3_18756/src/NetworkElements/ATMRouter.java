@@ -402,7 +402,7 @@ public class ATMRouter implements IATMCellConsumer{
 	
 	private void decideVC(int vc){
 		if(this.displayCommands)
-		System.out.println("Trace (ATMRouter) : First free VC = " + vc);
+		System.out.println("Trace (ATMRouter): First free VC = " + vc);
 	}
 
 	public NICVCPair getVCtoVC(int vc) {

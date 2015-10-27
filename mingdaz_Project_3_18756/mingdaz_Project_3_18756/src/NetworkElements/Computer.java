@@ -38,14 +38,23 @@ public class Computer implements IATMCellConsumer{
 	 * @since 1.0
 	 */
 	public void receiveCell(ATMCell cell, ATMNIC nic){
+		String[] command = cell.getData().split(" ");
+		int dest_address;
+		int vc;
+		ATMNIC nextnic = null;
+		ATMCell conn = null;
 		if(cell.getIsOAM()){
-			String[] command = cell.getData().split(" ");
 			switch (command[0]) {
 	         case "call":
 	        	 this.receivedCallProceeding(cell);
 	        	 break;
 	         case "connect":
 	        	 this.receivedConnect(cell);
+	        	 this.decideVC(cell.getVC());
+	        	 conn = new ATMCell(cell.getVC(), "connect ack" , this.getTraceID());
+    			 conn.setIsOAM(true);
+    			 this.sentConnectAck(conn);
+    			 nic.sendCell(conn , this);     			
 	         default:
 	             break;
 			}
@@ -279,5 +288,9 @@ public class Computer implements IATMCellConsumer{
 	 */
 	private void sentConnectAck(ATMCell cell){
 		System.out.println("SND CALLACK: Computer "+address+" sent a connect ack message " + cell.getTraceID());
+	}
+	
+	private void decideVC(int vc){
+		System.out.println("The connection is setup on VC " + vc);
 	}
 }
