@@ -8,6 +8,7 @@
 package NetworkElements;
 
 import java.util.*;
+
 import DataTypes.*;
 
 public class ATMRouter implements IATMCellConsumer{
@@ -19,7 +20,9 @@ public class ATMRouter implements IATMCellConsumer{
 	private int traceID = (int) (Math.random() * 100000); // create a random trace id for cells
 	private ATMNIC currentConnAttemptNIC = null; // The nic that is currently trying to setup a connection
 	private boolean displayCommands = true; // should we output the commands that are received?
-	
+	// self modified
+	private ArrayList<Integer> vc = new ArrayList<Integer>();
+	private int VC_count = 0;
 	/**
 	 * The default constructor for an ATM router
 	 * @param address the address of the router
@@ -50,6 +53,86 @@ public class ATMRouter implements IATMCellConsumer{
 		
 		if(cell.getIsOAM()){
 			// What's OAM for?
+			String[] command = cell.getData().split(" ");
+			int dest_address;
+			int vc;
+			ATMNIC nextnic = null;
+			ATMCell conn = null;
+			switch (command[0]) {
+	         case "setup":
+	        	 dest_address = Integer.parseInt(command[1]);
+	        	 
+	        	 if (this.currentConnAttemptNIC == null){
+	        		 // rec setup
+	        		 this.receivedSetup(cell);
+	        		 // snd callpro
+	        		 conn = new ATMCell(0, "call proceeding" , this.getTraceID());
+	        		 nextnic = this.nextHop.get(dest_address);
+	        		 conn.setIsOAM(true);
+	        		 this.sentCallProceeding(conn);
+	        		 nic.sendCell(conn , this);
+	        		if (dest_address != this.address){
+	     	        	 // snd setup
+	        			 this.setcurrentConnAttemptNIC(nic);
+	        			 nextnic.sendCell(cell,this);
+	        			 this.sentSetup(cell);
+	        		 }else{	        			 
+	        			 vc = this.getVCcount();
+	        			 this.decideVC(vc);
+	        			 conn = new ATMCell(vc, "connect " + vc  , this.getTraceID());
+	        			 conn.setIsOAM(true);
+	        			 this.sentConnect(conn);
+			        	 nic.sendCell(conn , this);
+	        		 }
+	        	 } else{
+	        		 conn = new ATMCell(0, "wait " + dest_address , this.getTraceID());
+	        		 conn.setIsOAM(true);
+		        	 this.sentWait(conn);
+		        	 nic.sendCell(conn , this);
+	        	 }
+	        	 break;
+	         case "wait":
+	        	 dest_address = Integer.parseInt(command[1]);
+	        	 	 // rec wait
+	        		 this.receivedWait(cell);
+	        		 // snd callpro
+	        		 conn = new ATMCell(0, "setup "+ dest_address , this.getTraceID());
+	        		 conn.setIsOAM(true);
+	        		 this.sentSetup(conn);
+	        		 nic.sendCell(conn , this);
+	        	 break;
+	         case "call":
+	        	 this.receivedCallProceeding(cell);
+	        	 break;
+	         case "connect":
+	        	 if (command[1].equals("ack")){
+	        		 this.receiveConnectAck(cell);
+	        	 }else{
+	        		 // receive connect
+		        	 this.receivedConnect(cell);
+		        	 // store vc nicvc pair
+		        	 vc = Integer.parseInt(command[1]); //output vc
+		        	 NICVCPair newpair = new NICVCPair(nic,vc);
+		        	 vc = this.getVCcount();	// input vc
+		        	 this.setVCtoVC(vc,newpair);
+		        	 // sent connect
+		        	 conn = new ATMCell(vc, "connect " + vc , this.getTraceID());
+	    			 nextnic = this.currentConnAttemptNIC;
+	    			 this.setcurrentConnAttemptNIC(null);
+	    			 conn.setIsOAM(true);
+	    			 this.sentConnect(conn);
+	    			 nextnic.sendCell(conn , this);
+	    			 // sent ack
+	    			 conn = new ATMCell(cell.getVC(), "connect ack" , this.getTraceID());
+	    			 conn.setIsOAM(true);
+	    			 this.sentConnectAck(conn);
+	    			 nic.sendCell(conn , this);
+	        	 }
+	        	 
+	        	 break;
+	         default:
+	             break;
+	     }
 		}
 		else{
 			// find the nic and new VC number to forward the cell on
@@ -305,5 +388,28 @@ public class ATMRouter implements IATMCellConsumer{
 	private void receivedWait(ATMCell cell){
 		if(this.displayCommands)
 		System.out.println("REC WAIT: Router " +this.address+ " received a wait message " + cell.getTraceID());
+	}
+	
+//	self define function
+	private void setcurrentConnAttemptNIC(ATMNIC nic){
+		this.currentConnAttemptNIC = nic;
+	}
+	
+	private int getVCcount(){
+		this.VC_count++;
+		return this.VC_count;
+	}
+	
+	private void decideVC(int vc){
+		if(this.displayCommands)
+		System.out.println("Trace (ATMRouter) : First free VC = " + vc);
+	}
+
+	public NICVCPair getVCtoVC(int vc) {
+		return this.VCtoVC.get(vc);
+	}
+
+	public void setVCtoVC(int vc,NICVCPair nicvcpair) {
+		this.VCtoVC.put(vc,nicvcpair);
 	}
 }
