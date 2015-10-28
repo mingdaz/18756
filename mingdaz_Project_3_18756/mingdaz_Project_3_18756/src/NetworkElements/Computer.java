@@ -51,6 +51,7 @@ public class Computer implements IATMCellConsumer{
 	         case "connect":
 	        	 this.receivedConnect(cell);
 	        	 this.decideVC(cell.getVC());
+	        	 this.setVC(cell.getVC());
 	        	 conn = new ATMCell(cell.getVC(), "connect ack" , this.getTraceID());
     			 conn.setIsOAM(true);
     			 this.sentConnectAck(conn);
@@ -290,7 +291,13 @@ public class Computer implements IATMCellConsumer{
 		System.out.println("SND CALLACK: Computer "+address+" sent a connect ack message " + cell.getTraceID());
 	}
 	
+	// self define
+	
 	private void decideVC(int vc){
 		System.out.println("The connection is setup on VC " + vc);
+	}
+	
+	private void setVC(int vc){
+		this.vcNumber = vc;
 	}
 }

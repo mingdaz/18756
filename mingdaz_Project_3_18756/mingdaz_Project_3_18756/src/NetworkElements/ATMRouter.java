@@ -22,7 +22,7 @@ public class ATMRouter implements IATMCellConsumer{
 	private boolean displayCommands = true; // should we output the commands that are received?
 	// self modified
 	private ArrayList<Integer> vc = new ArrayList<Integer>();
-	private int VC_count = 0;
+	private ArrayList<Boolean> vcfree = new ArrayList<Boolean>();
 	/**
 	 * The default constructor for an ATM router
 	 * @param address the address of the router
@@ -51,13 +51,16 @@ public class ATMRouter implements IATMCellConsumer{
 		if(trace)
 			System.out.println("Trace (ATMRouter): Received a cell " + cell.getTraceID());
 		
+		int dest_address;
+		int vc;
+		ATMNIC nextnic = null;
+		ATMCell conn = null;
+		NICVCPair newpair = null;
+		
 		if(cell.getIsOAM()){
 			// What's OAM for?
 			String[] command = cell.getData().split(" ");
-			int dest_address;
-			int vc;
-			ATMNIC nextnic = null;
-			ATMCell conn = null;
+			
 			switch (command[0]) {
 	         case "setup":
 	        	 dest_address = Integer.parseInt(command[1]);
@@ -77,7 +80,9 @@ public class ATMRouter implements IATMCellConsumer{
 	        			 nextnic.sendCell(cell,this);
 	        			 this.sentSetup(cell);
 	        		 }else{	        			 
-	        			 vc = this.getVCcount();
+	        			 vc = this.getVCnum();
+			        	 this.setVCtoVC(vc,null);
+			        	 
 	        			 this.decideVC(vc);
 	        			 conn = new ATMCell(vc, "connect " + vc  , this.getTraceID());
 	        			 conn.setIsOAM(true);
@@ -112,8 +117,8 @@ public class ATMRouter implements IATMCellConsumer{
 		        	 this.receivedConnect(cell);
 		        	 // store vc nicvc pair
 		        	 vc = Integer.parseInt(command[1]); //output vc
-		        	 NICVCPair newpair = new NICVCPair(nic,vc);
-		        	 vc = this.getVCcount();	// input vc
+		        	 newpair = new NICVCPair(nic,vc);
+		        	 vc = this.getVCnum();	// input vc
 		        	 this.setVCtoVC(vc,newpair);
 		        	 // sent connect
 		        	 conn = new ATMCell(vc, "connect " + vc , this.getTraceID());
@@ -128,7 +133,36 @@ public class ATMRouter implements IATMCellConsumer{
 	    			 this.sentConnectAck(conn);
 	    			 nic.sendCell(conn , this);
 	        	 }
-	        	 
+	        	 break;
+	         case "end":
+	        	 if (command[1].equals("ack")){
+	        		 this.receivedEndAck(cell);
+	        	 }else{
+	        		 // receive end
+		        	 this.recieveEnd(cell);
+		        	 // delete vc nicvc pair
+		        	 vc = Integer.parseInt(command[1]); //input vc
+		        	 if(this.VCtoVC.containsKey(vc)){
+		        		// release vc
+		    			 this.releaseVC(vc);
+			        	 newpair = this.VCtoVC.remove(vc);
+			        	 if(newpair!=null){
+			        	 // sent end
+			        	 conn = new ATMCell(newpair.getVC(), "end " + newpair.getVC() , this.getTraceID());
+		    			 nextnic = newpair.getNIC();
+		    			 conn.setIsOAM(true);
+		    			 this.sentEnd(conn);
+		    			 nextnic.sendCell(conn , this);
+			        	 }
+		    			 // sent ack
+		    			 conn = new ATMCell(cell.getVC(), "end ack" , this.getTraceID());
+		    			 conn.setIsOAM(true);
+		    			 this.sentEndAck(conn);
+		    			 nic.sendCell(conn , this);
+		        	 }else{
+		        		 this.cellNoVC(cell);
+		        	 }	    			 
+	        	 }
 	        	 break;
 	         default:
 	             break;
@@ -137,9 +171,20 @@ public class ATMRouter implements IATMCellConsumer{
 		else{
 			// find the nic and new VC number to forward the cell on
 			// otherwise the cell has nowhere to go. output to the console and drop the cell
+			vc = cell.getVC();
+			newpair = this.VCtoVC.get(vc);
+			if(newpair==null){
+				this.cellDeadEnd(cell);
+			}else{
+				nextnic = newpair.getNIC();
+				vc = newpair.getVC();
+				conn = new ATMCell(vc, cell.getData(), cell.getTraceID());
+				nextnic.sendCell(conn,this);
+			}
 		}		
 	}
 	
+
 	/**
 	 * Gets the number from the end of a string
 	 * @param string the sting to try and get a number from
@@ -395,9 +440,22 @@ public class ATMRouter implements IATMCellConsumer{
 		this.currentConnAttemptNIC = nic;
 	}
 	
-	private int getVCcount(){
-		this.VC_count++;
-		return this.VC_count;
+	private int getVCnum(){
+		int size = this.vc.size();
+		if(size==0){
+			this.vc.add(1);
+			this.vcfree.add(false);
+			return 1;
+		}
+		for(int i=0;i<size;i++){
+			if(this.vcfree.get(i)){
+				this.vcfree.set(i,false);
+				return this.vc.get(i);
+			}
+		}
+		this.vc.add(size+1);
+		this.vcfree.add(false);		
+		return size+1;
 	}
 	
 	private void decideVC(int vc){
@@ -411,5 +469,18 @@ public class ATMRouter implements IATMCellConsumer{
 
 	public void setVCtoVC(int vc,NICVCPair nicvcpair) {
 		this.VCtoVC.put(vc,nicvcpair);
+	}
+	
+	private void releaseVC(int vc) {
+		// TODO Auto-generated method stub
+		int size = this.vc.size();
+		int ind = this.vc.indexOf(vc);
+		if(size-1==ind){
+			this.vc.remove(ind);
+			this.vcfree.remove(ind);
+		}
+		else{
+			this.vcfree.set(ind,true);
+		}
 	}
 }

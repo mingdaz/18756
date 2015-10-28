@@ -8,18 +8,19 @@
 package NetworkElements;
 
 import DataTypes.*;
+
 import java.util.*;
 
 public class ATMNIC {
 	private IATMCellConsumer parent; // The router or computer that this nic is in
 	private OtoOLink link; // The link connected to this nic
-	private boolean trace = false; // should we print out debug statements?
+	private boolean trace = true; // should we print out debug statements?
 	private ArrayList<ATMCell> inputBuffer = new ArrayList<ATMCell>(); // Where cells are put between the parent and nic
 	private ArrayList<ATMCell> outputBuffer = new ArrayList<ATMCell>(); // Where cells are put to be outputted
 	private boolean tail=true, red=false, ppd=false, epd=false; // set what type of drop mechanism
 	private int maximumBufferCells = 20; // the maximum number of cells in the output buffer
 	private int startDropAt = 10; // the minimum number of cells in the output buffer before we start dropping cells
-	
+	private boolean flagppd = false;
 	/**
 	 * Default constructor for an ATM NIC
 	 * @param parent
@@ -62,8 +63,10 @@ public class ATMNIC {
 	 */
 	private void runTailDrop(ATMCell cell){
 		boolean cellDropped = false;
-		
-		outputBuffer.add(cell);
+		if(outputBuffer.size()==this.maximumBufferCells)
+			cellDropped=true;
+		else
+			this.outputBuffer.add(cell);
 		
 		// Output to the console what happened
 		if(cellDropped)
@@ -81,8 +84,16 @@ public class ATMNIC {
 	private void runRED(ATMCell cell){
 		boolean cellDropped = false;
 		double dropProbability = 0.0;
+		int size = outputBuffer.size();
+		if(size>startDropAt){
+			dropProbability = (double)(size-startDropAt)/(double)(maximumBufferCells-startDropAt);
+		}
+		if(Math.random()<dropProbability)
+			cellDropped = true;
+		else
+			outputBuffer.add(cell);
 		
-		outputBuffer.add(cell);
+		
 		
 		// Output to the console what happened
 		if(cellDropped)
@@ -99,8 +110,68 @@ public class ATMNIC {
 	 */
 	private void runPPD(ATMCell cell){
 		boolean cellDropped = false;
+		double dropProbability = 0.0;
 		
-		outputBuffer.add(cell);
+		int size = outputBuffer.size();
+		if(this.flagppd){
+			// this packet has already been drop refuse new item
+			if(cell.getData().isEmpty()){
+				// new packet came in
+				this.flagppd = false;
+				if(size>startDropAt){
+					dropProbability = (double)(size-startDropAt)/(double)(maximumBufferCells-startDropAt);
+				}
+				if(Math.random()<dropProbability){
+					cellDropped = true;
+					this.flagppd = true;
+				}else{
+					// add the header to queue
+					outputBuffer.add(cell);
+				}				
+			}else{
+				cellDropped = true;
+			}
+	
+		}
+		else{
+			if(cell.getData().isEmpty()){
+				// new packet came in
+				this.flagppd = false;
+				if(size>startDropAt){
+					dropProbability = (double)(size-startDropAt)/(double)(maximumBufferCells-startDropAt);
+				}
+				if(Math.random()<dropProbability){
+					cellDropped = true;
+					this.flagppd = true;
+				}else{
+					// add the header to queue
+					outputBuffer.add(cell);
+				}				
+			}
+			else{
+				if(size>startDropAt){
+					dropProbability = (double)(size-startDropAt)/(double)(maximumBufferCells-startDropAt);
+				}
+				if(Math.random()<dropProbability){
+					cellDropped = true;
+					this.flagppd = true;
+					while(size>0){
+						ATMCell temp = outputBuffer.get(--size);
+						if(temp.getData().isEmpty()){
+							// header
+							System.out.println("(ppd-head)The cell " + temp.getTraceID() + " was dropped");
+							outputBuffer.remove(size);
+							break;
+						}else{
+							System.out.println("(ppd)The cell " + temp.getTraceID() + " was dropped");
+							outputBuffer.remove(size);
+						}
+					}
+				}
+				else
+					outputBuffer.add(cell);
+			}
+		}
 		
 		// Output to the console what happened
 		if(cellDropped)
