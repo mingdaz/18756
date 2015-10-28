@@ -188,9 +188,84 @@ public class ATMNIC {
 	 */
 	private void runEPD(ATMCell cell){
 		boolean cellDropped = false;
+		double dropProbability = 0.0;
 		
-		outputBuffer.add(cell);
-		
+		int size = outputBuffer.size();
+		if(this.flagppd){
+			// this packet has already been drop refuse new item
+			if(cell.getData().isEmpty()){
+				// new packet came in
+				this.flagppd = false;
+				int p_size = cell.getPacketData().getSize();
+				int p_num = (int)Math.ceil((double)p_size/(384.0))+1;
+				if(size+p_num>maximumBufferCells)
+					dropProbability = 1.0;
+				else if(size+p_num > startDropAt){
+					double notdrop = 1.0;
+					for(int i=startDropAt;i<size+p_size;i++){
+						notdrop *= (double)(maximumBufferCells-i)/(double)(maximumBufferCells-startDropAt);
+					}
+					dropProbability = 1.0-notdrop;
+				}				
+				if(Math.random()<dropProbability){
+					cellDropped = true;
+					this.flagppd = true;
+				}else{
+					// add the header to queue
+					outputBuffer.add(cell);
+				}				
+			}else{
+				cellDropped = true;
+			}
+	
+		}
+		else{
+			if(cell.getData().isEmpty()){
+				// new packet came in
+				this.flagppd = false;
+				int p_size = cell.getPacketData().getSize();
+				int p_num = (int)Math.ceil((double)p_size/(384.0))+1;
+				if(size+p_num>maximumBufferCells)
+					dropProbability = 1.0;
+				else if(size+p_num > startDropAt){
+					double notdrop = 1.0;
+					for(int i=startDropAt;i<size+p_size;i++){
+						notdrop *= (double)(maximumBufferCells-i)/(double)(maximumBufferCells-startDropAt);
+					}
+					dropProbability = 1.0-notdrop;
+				}				
+				if(Math.random()<dropProbability){
+					cellDropped = true;
+					this.flagppd = true;
+				}else{
+					// add the header to queue
+					outputBuffer.add(cell);
+				}				
+			}
+			else{
+				if(size>startDropAt){
+					dropProbability = (double)(size-startDropAt)/(double)(maximumBufferCells-startDropAt);
+				}
+				if(Math.random()<dropProbability){
+					cellDropped = true;
+					this.flagppd = true;
+					while(size>0){
+						ATMCell temp = outputBuffer.get(--size);
+						if(temp.getData().isEmpty()){
+							// header
+							System.out.println("(ppd-head)The cell " + temp.getTraceID() + " was dropped");
+							outputBuffer.remove(size);
+							break;
+						}else{
+							System.out.println("(ppd)The cell " + temp.getTraceID() + " was dropped");
+							outputBuffer.remove(size);
+						}
+					}
+				}
+				else
+					outputBuffer.add(cell);
+			}
+		}
 		// Output to the console what happened
 		if(cellDropped)
 			System.out.println("The cell " + cell.getTraceID() + " was dropped");

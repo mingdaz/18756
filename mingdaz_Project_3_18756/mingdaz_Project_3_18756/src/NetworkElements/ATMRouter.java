@@ -178,7 +178,11 @@ public class ATMRouter implements IATMCellConsumer{
 			}else{
 				nextnic = newpair.getNIC();
 				vc = newpair.getVC();
-				conn = new ATMCell(vc, cell.getData(), cell.getTraceID());
+				if(cell.getData().isEmpty()){
+					conn = new ATMCell(vc, cell.getPacketData(), cell.getTraceID());
+				}else{
+					conn = new ATMCell(vc, cell.getData(), cell.getTraceID());
+				}
 				nextnic.sendCell(conn,this);
 			}
 		}		
