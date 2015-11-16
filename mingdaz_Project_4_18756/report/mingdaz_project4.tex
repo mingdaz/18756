@@ -1,0 +1,112 @@
+\documentclass[letterpapper]{article}
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage[margin=2cm]{geometry}
+\usepackage{tikz}
+\usepackage{float}
+\usepackage{minted}
+\usepackage{color}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage[ruled,vlined,linesnumbered]{algorithm2e}
+\usetikzlibrary{chains}
+
+
+% Disable page numbering
+\pagestyle{empty}
+
+
+% Define our own macros, for convenience
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% \ensuremath{ARG} is used to enable mathematics mode in a macro
+% ARG will always be rendered in math mode,
+% regardless of which mode the macro is called in
+%
+% http://www.giss.nasa.gov/tools/latex/ensuremath.html
+
+% \snode{ID}{NUMBER} becomes \node{ID}[item]{\ensuremath{NUMBER}}
+\newcommand{\snode}[2]{\node(#1)[item]{\ensuremath{#2}}}
+
+% \nodelabel{SUBSCRIPT} becomes \node[label]{\ensuremath{S_SUBSCRIPT}}
+\newcommand{\nodelabel}[1]{\node[label]{\ensuremath{S_#1}}}
+
+
+% Begin the actual typesetting, by starting the "document" environment
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\title{18-756 Project 4}
+
+\author{Mingda Zhang}
+
+\date{\today}
+
+\begin{document}
+\maketitle
+\section{Simple explanation of my implementation code}
+I have modified Switch.java files. For input queueing, each time interval the switch will go over every in port to see if there is packet in the queue. If the packet is going to an out port haven't be taken. Then I remove the packet from the input queue and send the packet to the corresponding out port. For output queueing, each time interval I check if the in port has packet. If so, I direct send the packet to the out port. In addition, I have change the ExampleTA.java file to keep update the delay time. 
+\section{TestCase}
+I have randomly generate 4 set of testcase for each size of switch. All the test files are in the "testcase" folder. In these testcases every source computer will send same number of packet. I have generate testacses with queue length 10,20,50 and 100. The destinations of these packet are randomly generated.
+\section{Experiment result}
+Switch buffer size = 20:
+\begin{table}[ht]
+\begin{tabular}{| p{1cm} | p{1cm} | p{1cm} | p{1cm} | p{1cm} | p{1cm} | p{1cm} | p{1cm} | p{1cm} | p{1cm} | p{1cm} | p{1cm} | p{1cm} |}
+\hline
+Data &
+\multicolumn{2}{| p{2cm} |}{$2\times2$ } & 
+\multicolumn{2}{| p{2cm} |}{$4\times4$} & 
+\multicolumn{2}{| p{2cm} |}{$8\times8$} & 
+\multicolumn{2}{| p{2cm} |}{$16\times16$} & 
+\multicolumn{2}{| p{2cm} |}{$32\times32$} & 
+\multicolumn{2}{| p{2cm} |}{$64\times64$} \\
+\hline
+Max Delay & 
+input queue & output queue &
+input queue & output queue &
+input queue & output queue &
+input queue & output queue &
+input queue & output queue &
+input queue & output queue \\
+\hline
+10 &
+15 & 11 &
+18 & 13 &
+23 & 14 &
+26 & 19 &
+23 & 17 &
+25 & 18 \\
+\hline
+20 &
+32 & 23 &
+36 & 25 &
+42 & 27 &
+44 & 28 &
+47 & 32 &
+49 & 32 \\
+\hline
+50 &
+81 & 58 &
+84 & 59 &
+96 & 61 &
+107 & 68 &
+107 & 68 &
+123 & 66 \\
+\hline
+100 &
+144 & 107 &
+182 & 122 &
+202 & 113 &
+215 & 115 &
+215 & 128 &
+229 & 119 \\
+\hline
+\end{tabular}
+\end{table}
+ From the above table we could see that output queueing is not suffering from front of line problem. Therefore that kind of switch has higher throughput. As for the switch size, I only compare the scenario where each port has same length input queue. As the switcher growing larger the max delay time get larger too.
+\section{Further Analysis}
+It is easy to understand the fact that output queueing has larger throughput than input queueing. Let's focus on the size of the switchers. If the packet is uniform distributed. For 2 by 2 switcher the probability of collision is $1/2$. This consistent with our experiment result. The max delay is about 1.5 times of the length of the queue. 
+
+\end{document}
