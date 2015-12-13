@@ -92,7 +92,7 @@ public class example {
 		
 		// set the drop mechanism if we want to try them
 		for(int i=0; i<this.allConsumers.size(); i++)
-			this.allConsumers.get(i).useTailDrop();
+			this.allConsumers.get(i).usePPD();
 		
 		// Setup a connection from comp1 to router 13 and comp2 to 14
 		tock();
@@ -101,9 +101,10 @@ public class example {
 		comp2.setupConnection(14);
 		for(int i=0; i<12; i++)
 			this.tock();
-		//comp1.sendPacket(500);
-		//for(int i=0; i<8; i++)
-			//this.tock();
+		for(int i=0; i<30; i++)
+			comp1.sendPacket((int)(Math.random()*10000));
+		for(int i=0; i<20; i++)
+			this.tock();
 	}
 	
 	/**

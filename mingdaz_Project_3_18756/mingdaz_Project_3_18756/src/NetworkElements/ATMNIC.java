@@ -155,18 +155,18 @@ public class ATMNIC {
 				if(Math.random()<dropProbability){
 					cellDropped = true;
 					this.flagppd = true;
-					while(size>0){
-						ATMCell temp = outputBuffer.get(--size);
-						if(temp.getData().isEmpty()){
-							// header
-							System.out.println("(ppd-head)The cell " + temp.getTraceID() + " was dropped");
-							outputBuffer.remove(size);
-							break;
-						}else{
-							System.out.println("(ppd)The cell " + temp.getTraceID() + " was dropped");
-							outputBuffer.remove(size);
-						}
-					}
+//					while(size>0){
+//						ATMCell temp = outputBuffer.get(--size);
+//						if(temp.getData().isEmpty()){
+//							// header
+//							System.out.println("(ppd-head)The cell " + temp.getTraceID() + " was dropped");
+//							outputBuffer.remove(size);
+//							break;
+//						}else{
+//							System.out.println("(ppd)The cell " + temp.getTraceID() + " was dropped");
+//							outputBuffer.remove(size);
+//						}
+//					}
 				}
 				else
 					outputBuffer.add(cell);
@@ -175,7 +175,7 @@ public class ATMNIC {
 		
 		// Output to the console what happened
 		if(cellDropped)
-			System.out.println("The cell " + cell.getTraceID() + " was dropped");
+			System.out.println("The cell " + cell.getTraceID() + " was dropped" );
 		else
 			if(this.trace)
 			System.out.println("The cell " + cell.getTraceID() + " was added to the output queue");
@@ -249,18 +249,18 @@ public class ATMNIC {
 				if(Math.random()<dropProbability){
 					cellDropped = true;
 					this.flagppd = true;
-					while(size>0){
-						ATMCell temp = outputBuffer.get(--size);
-						if(temp.getData().isEmpty()){
-							// header
-							System.out.println("(ppd-head)The cell " + temp.getTraceID() + " was dropped");
-							outputBuffer.remove(size);
-							break;
-						}else{
-							System.out.println("(ppd)The cell " + temp.getTraceID() + " was dropped");
-							outputBuffer.remove(size);
-						}
-					}
+//					while(size>0){
+//						ATMCell temp = outputBuffer.get(--size);
+//						if(temp.getData().isEmpty()){
+//							// header
+//							System.out.println("(ppd-head)The cell " + temp.getTraceID() + " was dropped");
+//							outputBuffer.remove(size);
+//							break;
+//						}else{
+//							System.out.println("(ppd)The cell " + temp.getTraceID() + " was dropped");
+//							outputBuffer.remove(size);
+//						}
+//					}
 				}
 				else
 					outputBuffer.add(cell);
