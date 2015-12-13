@@ -43,19 +43,19 @@ public class example {
 		this.allConsumers.add(r5);
 		
 		//send packets from router 1 to the other routers...
-		r1.createPacket(11, 0);
-		r1.createPacket(3, 0);
+//		r1.createPacket(11, 0);
+//		r1.createPacket(3, 0);
 		r1.createPacket(11, 0);
 		r1.createPacket(13, 0);
-		r1.createPacket(14, 0);
+//		r1.createPacket(14, 0);
 		
-		tock();
+		for(int i=0;i<10;i++)
+			tock();
 	}
 	
 	public void tock(){
 		System.out.println("** TIME = " + time + " **");
 		time++;
-		
 		
 		// Send packets between routers
 		for(int i=0; i<this.allConsumers.size(); i++)

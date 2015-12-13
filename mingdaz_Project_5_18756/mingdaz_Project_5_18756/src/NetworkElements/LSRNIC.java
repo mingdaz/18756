@@ -40,10 +40,9 @@ public class LSRNIC {
 			if(currentPacket==null)
 				System.out.println("Warning (LSR NIC): You are sending a null packet");
 		}
-		
-		
-		parent.sendPacket(currentPacket);
-		
+			
+//		parent.sendPacket(currentPacket);
+		this.runRED(currentPacket);
 	}
 	
 	
@@ -55,8 +54,17 @@ public class LSRNIC {
 	private void runRED(Packet currentPacket){
 		boolean packetDropped = false;
 		double dropProbability = 0.0;
-		
-		outputBuffer.add(currentPacket);
+		// 
+		int size = outputBuffer.size();
+		if(size>startDropAt){
+			dropProbability = (double)(size-startDropAt)/(double)(maximumBuffer-startDropAt);
+		}
+
+		if(Math.random()<dropProbability)
+			packetDropped = true;
+		else
+			outputBuffer.add(currentPacket);
+//		outputBuffer.add(currentPacket);
 	}
 	
 	/**
@@ -100,5 +108,9 @@ public class LSRNIC {
 		for(int i=0; i<this.inputBuffer.size(); i++)
 			this.parent.receivePacket(this.inputBuffer.get(i), this);
 		this.inputBuffer.clear();
+	}
+	
+	public LSR getParent(){
+		return this.parent;
 	}
 }

@@ -8,6 +8,10 @@ public class Packet {
 	private boolean OAM = false;
 	private Queue<MPLS> MPLSheader = new LinkedList<MPLS>(); // all of the MPLS headers in this router
 	
+//	add variables
+	private String data="";
+	
+	
 	/**
 	 * The default constructor for a packet
 	 * @param source the source ip address of this packet
@@ -77,5 +81,33 @@ public class Packet {
 	public int getDSCP() {
 		return this.DSCP;
 	}
+	
+	// get oam flag
+	public boolean getIsOAM(){
+		return this.OAM;
+	}
+	
+	// get command string 
+	public String getData(){
+		return this.data;
+	}
+	
+	// set command string 
+	public void setData(String data){
+		this.data = data;
+	}
+		
+	// set command string 
+	public void setOAM(boolean flag){
+		this.OAM = flag;
+	}
+
+	public String print() {
+		// TODO Auto-generated method stub
+		String A;
+		A = "OAM:" + this.OAM + ",Data:" + this.data+ ",dest:" + this.dest+ ",source:" + this.source + ",DSCP:" + this.DSCP;
+		return A;
+	}
+	
 }
 	

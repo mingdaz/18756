@@ -18,10 +18,19 @@ public class OtoOLink {
 		this.r2NIC = r2NIC;
 		this.r2NIC.connectOtoOLink(this);
 		
+		// update map information
+		if(r1NIC != null&&r2NIC!=null){
+			LSR x = r1NIC.getParent();
+			LSR y = r2NIC.getParent();
+			LSR.connectMap(x.getAddress(), y.getAddress());
+			x.addpair(y.getAddress(), r1NIC);
+			y.addpair(x.getAddress(), r2NIC);
+		}
+		
 		if(this.trace){
 			if(r1NIC==null)
 				System.err.println("Error (OtoOLink): R1 nic is null");
-			if(r1NIC==null)
+			if(r2NIC==null)
 				System.err.println("Error (OtoOLink): R2 nic is null");
 		}
 	}
